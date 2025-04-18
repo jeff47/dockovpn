@@ -1,18 +1,16 @@
-<p align=center><img src="https://alekslitvinenk.github.io/docker-openvpn/assets/img/logo-s.png"></p><br>
+<p>This work is based on the fine work found here:  https://github.com/dockovpn/dockovpn</p>
 
-<p align="center">
-<a href="https://github.com/alekslitvinenk/docker-openvpn/blob/master/README.md">[English]</a>
-<a href="https://github.com/alekslitvinenk/docker-openvpn/blob/master/docs/README_RU.md">[Русский]</a>
-<a href="https://github.com/alekslitvinenk/docker-openvpn/blob/master/docs/README_CN.md">[中国人]</a>
-<br>
+<p>The usage and documentation is the same as the parent image, with a few updates: </p>
+<ul>
+ <li>Server and client configuration files can be provided in the $APP_PERSIST_DIR as server.conf or client.ovpn.  The default will be copied into that directory as server.conf.dist or client.ovpn.dist for reference.  If present, those
+ will override the configuration options present in the configuration files present in the container.</li>
+ <li>DNS options can be specified via environmental variables in docker.  (IE, setting the environmental variable DNS_SERVER=8.8.8.8 would push 8.8.8.8 as the DNS server to VPN clients.)  At this time, only one server can be specified through an environmental variable.  If you need to specify more than one DNS server, add those to a custom server.conf file and put it in $APP_PERSIST_DIR.</li>
+ <li>The XOR patches created by [Tunnelblick](https://github.com/Tunnelblick/Tunnelblick) have been applied.  Obfuscation parameters can be added to the server.conf file in $APP_PERSIST_DIR, or as an environmental variable.  The syntax follows [this](https://www.tunnelblick.net/cOpenvpn_xorpatch.html#scramble-option-syntax), ie OBFUSCATE=obfuscate XXXX.  The obfuscation string can easily be generated using <code>openssl rand -base64 24</code>.</li>
+ <li>Parameters specified as environmental variables override settings in the conf files.</li>
+</ul>
 
-![Build Version](http://cicd.dockovpn.io/version/dockovpn)
-![Build Status](http://cicd.dockovpn.io/build/dockovpn)
-[![Tests Status](http://cicd.dockovpn.io/tests/dockovpn)](https://cicd.dockovpn.io/reports/dockovpn)
-![Build Time](http://cicd.dockovpn.io/built/dockovpn)
-[![Docker Pulls](https://img.shields.io/docker/pulls/alekslitvinenk/openvpn.svg)](https://hub.docker.com/r/alekslitvinenk/openvpn/)
-[![Gitter chat](https://img.shields.io/badge/chat-on_gitter-50b6bb.svg)](https://gitter.im/docker-openvpn/community)
-![GitHub](https://img.shields.io/github/license/dockovpn/dockovpn)
+<p>Content from here to the end is from the parent project.</p>
+<hr />
 
 # 🔐DockOvpn
 <p align=center><a href="https://techround.co.uk/vpns/11-dockovpn-solutions/" target="_blank"><img src="https://alekslitvinenk.github.io/docker-openvpn/assets/img/VPN53-Badge-300x300.png"  width="198" height="198"></a></p><br>
@@ -45,27 +43,6 @@ If you'd like to help support the future of the project, please consider:
 [Other resources](#other-resources)
 
 ## Resources
-
-### Real-time Chat
-[Slack](https://dockovpn.slack.com) ([registration](https://join.slack.com/t/dockovpn/shared_invite/zt-200sz4vdi-w2qCtjlN7YIu~ZQPfph_Ow))
-
-### Website
-
-<https://dockovpn.io>
-
-### Social media
-
-| Name | URL |
-| :--: | :-----: |
-| LinkedIn | <https://www.linkedin.com/company/dockovpn> |
-| Facebook | <https://www.facebook.com/dockovpn> |
-
-### Repos
-
-| Name | URL |
-| :--: | :-----: |
-| GitHub | <https://github.com/dockovpn/dockovpn> |
-| Docker Hub | <https://hub.docker.com/r/alekslitvinenk/openvpn> |
 
 ## Container properties
 
