@@ -41,6 +41,15 @@ do
   esac
 done
 
+# If a user supplied server.conf exists, use that instead of the one in the container.
+if [ -f ${APP_PERSIST_DIR}/server.conf ]; then
+  cp ${APP_PERSIST_DIR}/server.conf /etc/openvpn/server.conf
+  echo "Using supplied server.conf file from ${APP_PERSIST_DIR}"
+fi
+
+# Put the default version of server.conf into APP_PERSIST_DIR for referencce.
+cp /opt/Dockovpn/config/server.conf ${APP_PERSIST_DIR}/server.conf.dist
+
 ADAPTER="${NET_ADAPTER:=eth0}"
 
 mkdir -p /dev/net
@@ -52,6 +61,18 @@ fi
 
 # Replace variables in ovpn config file
 sed -i 's/%HOST_TUN_PROTOCOL%/'"$HOST_TUN_PROTOCOL"'/g' /etc/openvpn/server.conf
+
+# If the ENV DNS_SERVER is set, use that to push DNS info to clients.  This overrides any DNS option set in server.conf.
+if [ ! -z "${DNS_SERVER}" ]; then
+  sed -i '/push "dhcp-option DNS .*"$/d' /etc/openvpn/server.conf
+  echo "push \"dhcp-option DNS ${DNS_SERVER}\"" >> /etc/openvpn/server.conf
+fi
+
+# If the ENV OBFUSCATE is set, put that in the server conf file.  This setting overrides the scramble setting in server.conf.
+if [ ! -z "${OBFUSCATE}" ]; then
+  sed -i '/^scramble .*$/d' /etc/openvpn/server.conf
+  echo "scramble ${OBFUSCATE}" >> /etc/openvpn/server.conf
+fi
 
 # Allow ${HOST_TUN_PROTOCOL} traffic on port 1194.
 iptables -A INPUT -i $ADAPTER -p ${HOST_TUN_PROTOCOL} -m state --state NEW,ESTABLISHED --dport 1194 -j ACCEPT
@@ -77,9 +98,10 @@ if [ ! -f $LOCKFILE ]; then
     IS_INITIAL="1"
     test -d pki || REGENERATE="1"
     if [[ -n $REGENERATE ]]; then
+        echo "Regenerating PKI and DH files."
         easyrsa --batch init-pki
         easyrsa --batch gen-dh
-        # DH parameters of size 2048 created at /usr/share/easy-rsa/pki/dh.pem
+        # DH parameters created at /usr/share/easy-rsa/pki/dh.pem
         # Copy DH file
         cp pki/dh.pem /etc/openvpn
     fi
@@ -103,7 +125,7 @@ yes
 EOF3
     # Certificate created at: /opt/Dockovpn_data/pki/issued/MyReq.crt
 
-    openvpn --genkey --secret ta.key << EOF4
+    openvpn --genkey secret ta.key << EOF4
 yes
 EOF4
 

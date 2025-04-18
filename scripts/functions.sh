@@ -26,10 +26,25 @@ function createConfig() {
     cp "pki/private/$CLIENT_ID.key" "pki/issued/$CLIENT_ID.crt" pki/ca.crt /etc/openvpn/ta.key $CLIENT_PATH
 
     cd "$APP_INSTALL_PATH"
-    cp config/client.ovpn $CLIENT_PATH
+    # If a user supplied client.ovpn exists, use that instead of the one in the container.
+    if [ -f $APP_PERSIST_DIR/client.ovpn ]; then
+        echo "Using user supplied client.ovpn options from $APP_PERSIST_DIR/client.ovpn."
+        cp "$APP_PERSIST_DIR/client.ovpn" $CLIENT_PATH
+    else
+        cp config/client.ovpn $CLIENT_PATH
+    fi
+
     sed -i 's/%HOST_TUN_PROTOCOL%/'"$HOST_TUN_PROTOCOL"'/g' $CLIENT_PATH/client.ovpn
 
     echo -e "\nremote $HOST_ADDR_INT $HOST_TUN_PORT" >> "$CLIENT_PATH/client.ovpn"
+
+    #  Two options here.  If ENV OBFUSCATE is set, use that to set the obfuscate option.
+    #  Alternatively, if ENV OBFUSCATE is not set, use the line from server.conf, if that exists.
+    if [ ! -z "${OBFUSCATE}" ]; then
+      echo "scramble ${OBFUSCATE}" >> "$CLIENT_PATH/client.ovpn"
+    else
+      sed -n -e '/scramble /Ip' /etc/openvpn/server.conf >> "$CLIENT_PATH/client.ovpn"
+    fi
 
     # Embed client authentication files into config file
     cat <(echo -e '<ca>') \
